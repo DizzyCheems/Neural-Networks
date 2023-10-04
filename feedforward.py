@@ -10,13 +10,11 @@ class CreditWorthinessNN(nn.Module):
         self.fc1 = nn.Linear(input_size, hidden_size)
         self.relu = nn.ReLU()
         self.fc2 = nn.Linear(hidden_size, output_size)
-        self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
         out = self.fc1(x)
         out = self.relu(out)
         out = self.fc2(out)
-        out = self.softmax(out)
         return out
 
 # Define the input size, hidden layer size, and output size
@@ -31,31 +29,37 @@ model = CreditWorthinessNN(input_size, hidden_size, output_size)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-# Sample data for training (you should replace this with your dataset)
+# Updated training data
 # Each row represents a person with income, education, age, and house ownership
 # The last column represents their creditworthiness level (0 for excellent, 1 for average, 2 for poor)
 data = torch.tensor([
     [120000, 5, 35, 1, 0],    # Excellent creditworthiness (high income, high education)
-    [30000, 2, 28, 0, 1],    # Poor creditworthiness (low income)
+    [300, 2, 28, 0, 2],    # Poor creditworthiness (low income)
     [80000, 5, 40, 1, 0],    # Excellent creditworthiness (high income, high education)
-    [60000, 3, 32, 1, 2],    # Average creditworthiness (average income)
-    [20000, 2, 45, 0, 2],    # Poor creditworthiness (low income)
+    [6000, 3, 32, 1, 1],    # Average creditworthiness (average income)
+    [20, 2, 45, 0, 2],    # Poor creditworthiness (low income)
     [150000, 4, 55, 1, 0],  # Excellent creditworthiness (high income, high education)
-    [45000, 2, 30, 0, 2],    # Poor creditworthiness (average income)
+    [450, 2, 30, 0, 2],    # Poor creditworthiness (average income)
     [55000, 3, 38, 1, 1],    # Average creditworthiness (average income)
-    [18000, 1, 27, 0, 2],    # Poor creditworthiness (low income)
+    [180, 1, 27, 0, 2],    # Poor creditworthiness (low income)
     [100000, 4, 42, 1, 0],  # Excellent creditworthiness (high income, high education)
     [90000, 4, 37, 1, 0],    # Excellent creditworthiness (high income, high education)
-    [48000, 3, 29, 0, 2],    # Average creditworthiness (average income)
-    [25000, 1, 22, 0, 2],    # Poor creditworthiness (low income)
-    [55000, 3, 36, 1, 1],    # Average creditworthiness (average income)
+    [4800, 3, 29, 0, 1],    # Average creditworthiness (average income)
+    [252, 1, 22, 0, 2],    # Poor creditworthiness (low income)
+    [5500, 3, 36, 1, 1],    # Average creditworthiness (average income)
     [135000, 4, 44, 1, 0],  # Excellent creditworthiness (high income, high education)
     [92000, 4, 38, 1, 0],    # Excellent creditworthiness (high income, high education)
-    [40000, 3, 31, 0, 2],    # Average creditworthiness (average income)
-    [28000, 2, 29, 0, 2],    # Poor creditworthiness (low income)
-    [52000, 4, 39, 1, 1],    # Average creditworthiness (average income)
+    [40000, 3, 31, 0, 1],    # Average creditworthiness (average income)
+    [280, 2, 29, 0, 2],    # Poor creditworthiness (low income)
+    [5200, 4, 39, 1, 1],    # Average creditworthiness (average income)
     [140000, 5, 48, 1, 0],  # Excellent creditworthiness (high income, high education)
     [110000, 5, 42, 1, 0],  # Excellent creditworthiness (high income, high education)
+    [70000, 3, 34, 1, 1],  # Average creditworthiness (average income)
+    [2500, 2, 26, 0, 2],    # Poor creditworthiness (low income)
+    [30000, 3, 33, 1, 1],    # Average creditworthiness (average income)
+    [1800, 1, 23, 0, 2],    # Poor creditworthiness (low income)
+    [115000, 4, 47, 1, 0],  # Excellent creditworthiness (high income, high education)
+    [65000, 3, 36, 1, 1],  # Average creditworthiness (average income)
 ], dtype=torch.float32)
 
 # Splitting the data into features (X) and labels (y)
@@ -90,7 +94,7 @@ def load_model(model, model_path):
 # Check if a pre-trained model exists
 model_path = "credit_worthiness_model.pt"
 if os.path.exists(model_path):
-    print("Found a pre-trained model.")
+    print("Found a pre-trained model.") 
     choice = input("Do you want to use the pre-trained model? (yes/no): ").lower()
     if choice == "yes":
         model = CreditWorthinessNN(input_size, hidden_size, output_size)
@@ -103,7 +107,30 @@ else:
     train_model(model, X_train, y_train)
     save_model(model, model_path)
 
-# After training or loading the model, you can use it for predictions
-new_data = torch.tensor([[110000, 5, 33, 1]], dtype=torch.float32)  # High income, high education
-predicted_class = torch.argmax(model(new_data), dim=1)
-print("Predicted Class:", predicted_class.item())
+# Function to input values and make predictions
+def predict_creditworthiness(model):
+    income = float(input("Enter income: "))
+    education = int(input("Enter education level (1 to 5): "))
+    age = int(input("Enter age: "))
+    property_ownership = int(input("Enter property ownership (0 for no, 1 for yes): "))
+    
+    new_data = torch.tensor([[income, education, age, property_ownership]], dtype=torch.float32)
+    predicted_scores = model(new_data)
+    predicted_class = torch.argmax(predicted_scores, dim=1)
+    
+    return predicted_class.item()
+
+# Input values and make predictions
+while True:
+    print("\nPredict Creditworthiness")
+    predicted_class = predict_creditworthiness(model)
+    if predicted_class == 0:
+        print("Predicted Class: Excellent")
+    elif predicted_class == 1:
+        print("Predicted Class: Average")
+    elif predicted_class == 2:
+        print("Predicted Class: Poor")
+    
+    cont = input("\nDo you want to make another prediction? (yes/no): ").lower()
+    if cont != "yes":
+        break
